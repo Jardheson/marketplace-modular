@@ -1,0 +1,17 @@
+﻿                                                               QUERY PLAN                                                                
+-----------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=8.45..8.45 rows=1 width=48) (actual time=0.176..0.177 rows=1 loops=1)
+   Buffers: shared hit=7
+   ->  Sort  (cost=8.45..8.45 rows=1 width=48) (actual time=0.175..0.176 rows=1 loops=1)
+         Sort Key: created_at DESC
+         Sort Method: quicksort  Memory: 25kB
+         Buffers: shared hit=7
+         ->  Index Scan using idx_orders_customer on orders  (cost=0.42..8.44 rows=1 width=48) (actual time=0.139..0.139 rows=1 loops=1)
+               Index Cond: (customer_id = '31483dd1-d462-4c17-97d7-adfca4106f61'::uuid)
+               Buffers: shared hit=4
+ Planning:
+   Buffers: shared hit=125
+ Planning Time: 0.988 ms
+ Execution Time: 0.235 ms
+(13 rows)
+

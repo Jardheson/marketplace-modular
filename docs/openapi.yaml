@@ -1,0 +1,343 @@
+openapi: 3.1.0
+info:
+  title: Marketplace Modular API
+  version: 1.0.0
+  description: |
+    API do Marketplace como monólito modular (catálogo, pedidos, pagamento).
+    Projeto Final - Full Cycle Módulo 4.
+  contact:
+    name: Jardheson Oliveira
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Ambiente local
+tags:
+  - name: Catalog
+    description: Produtos e categorias
+  - name: Orders
+    description: Pedidos
+  - name: Payments
+    description: Pagamentos
+
+paths:
+  /products:
+    get:
+      tags: [Catalog]
+      operationId: listProducts
+      summary: Lista produtos paginados
+      description: Retorna produtos paginados, com filtros opcionais por categoria, status e texto.
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 1, minimum: 1 }
+        - in: query
+          name: pageSize
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+        - in: query
+          name: categoryId
+          schema: { type: string, format: uuid }
+        - in: query
+          name: active
+          schema: { type: boolean }
+        - in: query
+          name: search
+          schema: { type: string }
+      responses:
+        '200':
+          description: Lista de produtos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProducts'
+    post:
+      tags: [Catalog]
+      operationId: createProduct
+      summary: Cria um novo produto
+      description: Cria um produto no catálogo após validar os campos e a categoria informada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Produto criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /products/{id}:
+    get:
+      tags: [Catalog]
+      operationId: getProductById
+      summary: Obtém um produto por ID
+      description: Retorna os dados de um produto identificado pelo UUID.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Produto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /orders:
+    get:
+      tags: [Orders]
+      operationId: listOrders
+      summary: Lista pedidos paginados
+      description: Retorna pedidos paginados, filtrados opcionalmente por cliente e status.
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 1, minimum: 1 }
+        - in: query
+          name: pageSize
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+        - in: query
+          name: customerId
+          schema: { type: string, format: uuid }
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+      responses:
+        '200':
+          description: Lista de pedidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrders'
+    post:
+      tags: [Orders]
+      operationId: createOrder
+      summary: Cria um novo pedido (reserva estoque)
+      description: Cria um pedido após validar os produtos e reservar as quantidades solicitadas.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Pedido criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /orders/{id}:
+    get:
+      tags: [Orders]
+      operationId: getOrderById
+      summary: Obtém um pedido por ID
+      description: Retorna um pedido e seus itens pelo UUID.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Pedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /payments:
+    post:
+      tags: [Payments]
+      operationId: processPayment
+      summary: Processa um pagamento (PIX, CREDIT_CARD ou BOLETO)
+      description: Processa o pagamento do pedido pelo método informado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessPaymentRequest'
+      responses:
+        '201':
+          description: Pagamento processado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+components:
+  responses:
+    BadRequest:
+      description: Requisição inválida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflito
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableEntity:
+      description: Regra de negócio violada
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: NOT_FOUND
+            message:
+              type: string
+              example: Produto não encontrado.
+            details:
+              type: object
+              additionalProperties: true
+
+    Product:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        price: { type: number, example: 3500 }
+        currency: { type: string, example: BRL }
+        stock: { type: integer }
+        categoryId: { type: string, format: uuid }
+        sku: { type: string }
+        active: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    CreateProductRequest:
+      type: object
+      required: [name, price, stock, categoryId, sku]
+      properties:
+        name: { type: string, minLength: 2 }
+        description: { type: string }
+        price: { type: integer, minimum: 1, description: Valor em BRL (inteiro) }
+        stock: { type: integer, minimum: 0 }
+        categoryId: { type: string, format: uuid }
+        sku: { type: string }
+
+    PaginatedProducts:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Product' } }
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+        totalPages: { type: integer }
+
+    OrderStatus:
+      type: string
+      enum: [PENDING, CONFIRMED, PAID, SHIPPED, DELIVERED, CANCELLED]
+
+    OrderItem:
+      type: object
+      properties:
+        productId: { type: string, format: uuid }
+        productName: { type: string }
+        quantity: { type: integer }
+        unitPrice: { type: number }
+        subtotal: { type: number }
+
+    Order:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        customerId: { type: string, format: uuid }
+        items: { type: array, items: { $ref: '#/components/schemas/OrderItem' } }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        total: { type: number }
+        currency: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    CreateOrderRequest:
+      type: object
+      required: [customerId, items]
+      properties:
+        customerId: { type: string, format: uuid }
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [productId, quantity]
+            properties:
+              productId: { type: string, format: uuid }
+              quantity: { type: integer, minimum: 1 }
+
+    PaginatedOrders:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Order' } }
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+        totalPages: { type: integer }
+
+    Payment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        orderId: { type: string, format: uuid }
+        amount: { type: number }
+        currency: { type: string }
+        method:
+          type: string
+          enum: [PIX, CREDIT_CARD, BOLETO]
+        status:
+          type: string
+          enum: [PENDING, PAID, FAILED, REFUNDED]
+        transactionId: { type: string }
+        paidAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ProcessPaymentRequest:
+      type: object
+      required: [orderId, method]
+      properties:
+        orderId: { type: string, format: uuid }
+        method:
+          type: string
+          enum: [PIX, CREDIT_CARD, BOLETO]
