@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+.env
+.env.local
+*.log
+*.cpuprofile
+.DS_Store
+.vscode
+.idea
+k6/results/

@@ -1,0 +1,5 @@
+dist
+coverage
+node_modules
+k6
+package-lock.json
