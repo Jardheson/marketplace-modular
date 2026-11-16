@@ -131,4 +131,4 @@ A flag é lida em `src/config/env.ts` e exposta por `src/shared/infrastructure/f
 
 ## Autor
 
-**Jardheson de Oliveira**
+**Jardheson Oliveira**
