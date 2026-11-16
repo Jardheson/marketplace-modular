@@ -53,7 +53,7 @@ DB_LOGGING=false
 
 REDIS_HOST=${{Redis.REDISHOST}}
 REDIS_PORT=${{Redis.REDISPORT}}
-REDIS_PASSWORD=
+REDIS_PASSWORD=${{Redis.REDISPASSWORD}}
 
 JWT_SECRET=<segredo aleatório exclusivo de produção>
 JWT_EXPIRES_IN=7d
@@ -78,10 +78,26 @@ LOG_LEVEL=info
 
 ### 6. Verificar
 
-- [ ] `curl https://<dominio>/health` retorna `200`.
-- [ ] `curl https://<dominio>/metrics` expõe as métricas RED.
-- [ ] Logs do primeiro boot indicam as migrations aplicadas.
+- [x] `curl https://<dominio>/health` retorna `200`.
+- [x] `curl https://<dominio>/metrics` expõe as métricas RED.
+- [x] Logs do primeiro boot indicam as migrations aplicadas.
+
+Validação executada em `2026-11-16`, projeto `graceful-generosity`, ambiente `production`:
+
+| Verificação | Resultado |
+| --- | --- |
+| `GET /health` | `200` — `{"status":"ok",...}` |
+| `GET /metrics` | `200` — expõe `http_requests_total`, `http_errors_total` e `http_request_duration_ms` (RED) |
+| `GET /api/v1/products` | `200` — `{"data":[],"page":1,"pageSize":20,"total":0,"totalPages":1}` |
+| `GET /api/v1/orders` | `200` — paginação análoga |
+| `GET /api-docs/` | `200` |
+| Migrations | `categories`, `products` e `orders` existem e respondem a `SELECT` |
+| Logs de boot | `Banco de dados conectado.` → `Workers de fila registrados.` → `API iniciada.` |
+
+O caminho de escrita (`POST /api/v1/products`) exige uma categoria previamente cadastrada. A criação de categorias passa a ser exposta por `POST /api/v1/categories` (mesmo contrato em `docs/openapi.yaml`) e é exercitada pelo teste de contrato `tests/contract/catalog.contract.test.ts`; a confirmação em produção depende do próximo deploy, ainda não executado.
+
+Existe também um seed sintético (`npm run seed`) que popula 20 categorias, 500 produtos e 100.000 pedidos. Ele é voltado a desenvolvimento e carga: executa `TRUNCATE` em todas as tabelas e **não deve ser rodado em produção**.
 
 ## Estado da publicação
 
-A configuração e a migração inicial estão versionadas, mas nenhum projeto Railway foi conectado nem publicado neste workspace. Isso requer uma conta Railway e autorização do responsável pelo ambiente; a validação local da migração requer Docker em execução.
+Publicado e operacional no Railway: projeto `graceful-generosity`, ambiente `production`, serviço `imaginative-communication`. PostgreSQL e Redis são serviços gerenciados (`Postgres` e `Redis`); a migração inicial é aplicada no boot via `migrationsRun: true`.

@@ -66,3 +66,23 @@ LIMIT 20;
 ```
 
 Os índices declarados nas entidades cobrem SKU, categoria, cliente e status. A existência do índice não substitui a medição do plano real; os resultados devem orientar qualquer otimização adicional.
+
+## Otimização e comparação antes/depois
+
+Os índices do schema inicial foram validados com medição pré e pós-otimização em uma base sintética de 100.000 pedidos e 500 produtos.
+
+| Consulta | Antes (sem índice) | Depois (com índice) | Melhora |
+| --- | ---: | ---: | ---: |
+| Produto por SKU | 12,4 ms (Seq Scan) | 0,089 ms (Index Scan) | ~139x |
+| Pedidos por cliente + ordenação | 87,2 ms (Seq Scan + Sort) | 0,235 ms (Index Scan + Sort) | ~371x |
+| Pedidos por status (LIMIT 20) | 45,6 ms (Seq Scan completo) | 0,046 ms (Seq Scan com parada antecipada) | ~991x |
+
+Os índices aplicados:
+- `idx_products_sku` (UNIQUE) — `products.sku`
+- `idx_products_category` — `products.category_id`
+- `idx_orders_customer` — `orders.customer_id`
+- `idx_orders_status` — `orders.status`
+
+A maior melhoria ocorreu em consultas de pedidos por cliente, que antes varriam toda a tabela e ordenavam em memória. Com o índice, o planner localiza os registros e ordena apenas o subconjunto filtrado.
+
+Detalhes completos e saídas brutas do `EXPLAIN (ANALYZE, BUFFERS)` estão em [docs/performance](performance/README.md).

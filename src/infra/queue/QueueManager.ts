@@ -1,7 +1,7 @@
 import { Queue, QueueEvents, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { env } from '../../config/env';
-import { logger } from '../../shared/infrastructure/logger';
+import { logger, sanitizeHost } from '../../shared/infrastructure/logger';
 
 const connection = new IORedis({
   host: env.redis.host,
@@ -9,6 +9,20 @@ const connection = new IORedis({
   password: env.redis.password || undefined,
   maxRetriesPerRequest: null,
   enableReadyCheck: false,
+});
+
+connection.on('error', (error) => {
+  const code = (error as NodeJS.ErrnoException).code;
+  logger.error(
+    {
+      target: 'redis',
+      host: sanitizeHost(env.redis.host),
+      port: env.redis.port,
+      code,
+      name: error.name,
+    },
+    'Falha na conexão com Redis.',
+  );
 });
 
 export interface JobPayload<T = unknown> {

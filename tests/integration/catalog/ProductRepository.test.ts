@@ -9,14 +9,22 @@ import { Money } from '../../../src/shared/domain/Money';
 import { ProductEntity } from '../../../src/modules/catalog/infra/persistence/typeorm/entities/Product.entity';
 import { CategoryEntity } from '../../../src/modules/catalog/infra/persistence/typeorm/entities/Category.entity';
 import { InitialSchema1700000000000 } from '../../../src/infra/database/migrations/1700000000000-InitialSchema';
+import { isDockerAvailable } from '../../helpers/dockerCheck';
 
 describe('ProductTypeOrmRepository (integração)', () => {
+  let dockerAvailable: boolean;
   let container: StartedTestContainer;
   let dataSource: DataSource;
   let productRepo: ProductTypeOrmRepository;
   let categoryRepo: CategoryTypeOrmRepository;
 
   beforeAll(async () => {
+    dockerAvailable = await isDockerAvailable();
+    if (!dockerAvailable) {
+      console.warn('Docker não disponível - pulando testes de integração');
+      return;
+    }
+
     container = await new GenericContainer('postgres:16-alpine')
       .withEnvironment({
         POSTGRES_DB: 'test_db',
@@ -56,11 +64,13 @@ describe('ProductTypeOrmRepository (integração)', () => {
   }, 120000);
 
   afterAll(async () => {
+    if (!dockerAvailable) return;
     if (dataSource) await dataSource.destroy();
     if (container) await container.stop();
   });
 
   it('deve salvar e recuperar um produto', async () => {
+    if (!dockerAvailable) return;
     const category = Category.create({ name: 'Eletrônicos' });
     await categoryRepo.save(category);
 
@@ -81,11 +91,13 @@ describe('ProductTypeOrmRepository (integração)', () => {
   });
 
   it('deve retornar null para SKU inexistente', async () => {
+    if (!dockerAvailable) return;
     const found = await productRepo.findBySku('NAO-EXISTE');
     expect(found).toBeNull();
   });
 
   it('deve reverter a migração inicial ao remover o schema', async () => {
+    if (!dockerAvailable) return;
     const queryRunner = dataSource.createQueryRunner();
     await queryRunner.connect();
     try {

@@ -4,12 +4,31 @@ import { initializeDatabase } from './infra/database/data-source';
 import { initTracing, shutdownTracing } from './infra/observability/tracing';
 import { queueManager } from './infra/queue/QueueManager';
 import { env } from './config/env';
-import { logger } from './shared/infrastructure/logger';
+import { logger, sanitizeHost } from './shared/infrastructure/logger';
+
+function getErrorDetails(error: unknown): { name?: string; code?: string } {
+  if (!(error instanceof Error)) return {};
+  const code = 'code' in error && typeof error.code === 'string' ? error.code : undefined;
+  return { name: error.name, code };
+}
 
 async function main(): Promise<void> {
   try {
     initTracing();
-    await initializeDatabase();
+    try {
+      await initializeDatabase();
+    } catch (error) {
+      logger.error(
+        {
+          target: 'postgres',
+          host: sanitizeHost(env.db.host),
+          port: env.db.port,
+          ...getErrorDetails(error),
+        },
+        'Falha ao conectar ao banco de dados.',
+      );
+      throw error;
+    }
     logger.info('Banco de dados conectado.');
 
     const app = createApp();
@@ -28,7 +47,7 @@ async function main(): Promise<void> {
     process.on('SIGINT', () => shutdown('SIGINT'));
     process.on('SIGTERM', () => shutdown('SIGTERM'));
   } catch (error) {
-    logger.error({ error }, 'Falha ao iniciar aplicação.');
+    logger.error(getErrorDetails(error), 'Falha ao iniciar aplicação.');
     process.exit(1);
   }
 }

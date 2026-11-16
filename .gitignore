@@ -1,11 +1,37 @@
+# Dependências e build
 node_modules
 dist
 coverage
+
+# Variáveis de ambiente e segredos
 .env
 .env.local
+.env.*.local
+
+# Tokens e credenciais do Railway
+railway-token.txt
+.railway-token
+.railway/
+
+# Scripts SQL com credenciais
+ALTER_ROLE*.sql
+*.sql.password
+*password*.sql
+
+# Logs e perfis
 *.log
 *.cpuprofile
+*.heapprofile
+
+# IDEs e sistema
 .DS_Store
 .vscode
 .idea
+
+# Resultados de teste de carga
 k6/results/
+
+# Artefatos temporários
+artifacts/
+tmp/
+*.tmp

@@ -22,3 +22,12 @@ export const logger = pino({
         },
       }),
 });
+
+export function sanitizeHost(host: string): string {
+  try {
+    const url = new URL(host.includes('://') ? host : `tcp://${host}`);
+    return url.hostname || 'unknown';
+  } catch {
+    return 'invalid';
+  }
+}

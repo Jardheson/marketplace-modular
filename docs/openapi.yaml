@@ -92,6 +92,28 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /categories:
+    post:
+      tags: [Catalog]
+      operationId: createCategory
+      summary: Cria uma nova categoria
+      description: Cria uma categoria no catálogo para agrupar produtos.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequest'
+      responses:
+        '201':
+          description: Categoria criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
   /orders:
     get:
       tags: [Orders]
@@ -256,6 +278,23 @@ components:
         stock: { type: integer, minimum: 0 }
         categoryId: { type: string, format: uuid }
         sku: { type: string }
+
+    Category:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        active: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    CreateCategoryRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 2 }
+        description: { type: string }
 
     PaginatedProducts:
       type: object

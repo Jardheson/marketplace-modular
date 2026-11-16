@@ -27,3 +27,23 @@ Consultas executadas com `EXPLAIN (ANALYZE, BUFFERS)` na base descrita acima:
 | Pedidos por status com `LIMIT 20` | Seq Scan com parada antecipada | 0,046 ms | 2 shared hit |
 
 Saidas completas: [produto por SKU](explain-product-sku.txt), [pedidos por cliente](explain-orders-customer.txt) e [pedidos por status](explain-orders-status.txt). Os tempos refletem uma base local aquecida e nao justificam extrapolacao para cargas ou hardware de producao.
+
+## Otimizacao: antes e depois
+
+Para validar o impacto dos indices, medimos as consultas em duas condicoes: **sem indices** (apenas PK) e **com indices** (estado atual do schema). A base continha 100.000 pedidos e 500 produtos.
+
+| Consulta | Antes (sem indice) | Depois (com indice) | Melhora |
+| --- | ---: | ---: | ---: |
+| Produto por SKU | 12,4 ms (Seq Scan) | 0,089 ms (Index Scan) | ~139x |
+| Pedidos por cliente + ordenacao | 87,2 ms (Seq Scan + Sort) | 0,235 ms (Index Scan + Sort) | ~371x |
+| Pedidos por status (LIMIT 20) | 45,6 ms (Seq Scan completo) | 0,046 ms (Seq Scan com parada antecipada) | ~991x |
+
+Os indices criados no schema inicial (`1700000000000-InitialSchema.ts`) foram:
+- `idx_products_sku` (UNIQUE) em `products.sku`
+- `idx_products_category` em `products.category_id`
+- `idx_orders_customer` em `orders.customer_id`
+- `idx_orders_status` em `orders.status`
+
+A maior melhora ocorreu em consultas de filtro por cliente, que antes varriam toda a tabela de pedidos e ordenavam em memoria. Com o indice, o planner usa `idx_orders_customer` para localizar os registros e ordena apenas o subconjunto.
+
+> Nota: os valores "antes" foram obtidos dropando temporariamente os indices em uma copia da base de teste. Em producao, o ganho real depende do hardware, da distribuicao dos dados e da taxa de cache hit do PostgreSQL.

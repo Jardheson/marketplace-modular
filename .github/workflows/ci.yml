@@ -73,6 +73,11 @@ jobs:
       - name: SCA (npm audit)
         run: npm audit --audit-level=high
 
+      - name: Secret scanning (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Run unit + contract tests with coverage
         run: npm run test:coverage
         env:
@@ -88,6 +93,18 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Build Docker image for Trivy scan
+        run: docker build -t marketplace-modular:ci .
+
+      - name: Container image scan (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: marketplace-modular:ci
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
 
       - name: Run integration tests
         run: npm run test:integration
