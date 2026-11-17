@@ -78,26 +78,35 @@ LOG_LEVEL=info
 
 ### 6. Verificar
 
-- [x] `curl https://<dominio>/health` retorna `200`.
-- [x] `curl https://<dominio>/metrics` expõe as métricas RED.
+- [x] `curl https://imaginative-communication-production-ffd35873.up.railway.app/health` retorna `200`.
+- [x] `curl https://imaginative-communication-production-ffd35873.up.railway.app/metrics` expõe as métricas RED.
 - [x] Logs do primeiro boot indicam as migrations aplicadas.
 
-Validação executada em `2026-11-16`, projeto `graceful-generosity`, ambiente `production`:
+Validação executada em `2026-11-17`, projeto `graceful-generosity`, ambiente `production`,
+domínio `https://imaginative-communication-production-ffd35873.up.railway.app`:
 
 | Verificação | Resultado |
 | --- | --- |
 | `GET /health` | `200` — `{"status":"ok",...}` |
 | `GET /metrics` | `200` — expõe `http_requests_total`, `http_errors_total` e `http_request_duration_ms` (RED) |
-| `GET /api/v1/products` | `200` — `{"data":[],"page":1,"pageSize":20,"total":0,"totalPages":1}` |
+| `GET /api/v1/products` | `200` — `{"data":[...],"page":1,"pageSize":1,"total":36,"totalPages":36}` (catálogo com 36 produtos) |
 | `GET /api/v1/orders` | `200` — paginação análoga |
+| `POST /api/v1/categories` | `400` — `VALIDATION_ERROR` para corpo `{}` (rota publicada e validação na borda ativa) |
+| `POST /api/v1/products` | `400` — `VALIDATION_ERROR` para corpo `{}` |
+| `POST /api/v1/orders` | `400` — `VALIDATION_ERROR` para corpo `{}` |
 | `GET /api-docs/` | `200` |
 | Migrations | `categories`, `products` e `orders` existem e respondem a `SELECT` |
 | Logs de boot | `Banco de dados conectado.` → `Workers de fila registrados.` → `API iniciada.` |
 
-O caminho de escrita (`POST /api/v1/products`) exige uma categoria previamente cadastrada. A criação de categorias passa a ser exposta por `POST /api/v1/categories` (mesmo contrato em `docs/openapi.yaml`) e é exercitada pelo teste de contrato `tests/contract/catalog.contract.test.ts`; a confirmação em produção depende do próximo deploy, ainda não executado.
+O caminho de escrita (`POST /api/v1/products`) exige uma categoria previamente cadastrada. A criação de categorias é exposta por `POST /api/v1/categories` (mesmo contrato em `docs/openapi.yaml`) e é exercitada pelo teste de contrato `tests/contract/catalog.contract.test.ts`. A rota foi confirmada em produção em `2026-11-17`: responde `400` com `VALIDATION_ERROR` para um corpo inválido, comprovando que está publicada e validando na borda.
 
 Existe também um seed sintético (`npm run seed`) que popula 20 categorias, 500 produtos e 100.000 pedidos. Ele é voltado a desenvolvimento e carga: executa `TRUNCATE` em todas as tabelas e **não deve ser rodado em produção**.
 
 ## Estado da publicação
 
 Publicado e operacional no Railway: projeto `graceful-generosity`, ambiente `production`, serviço `imaginative-communication`. PostgreSQL e Redis são serviços gerenciados (`Postgres` e `Redis`); a migração inicial é aplicada no boot via `migrationsRun: true`.
+
+- API pública: `https://imaginative-communication-production-ffd35873.up.railway.app`
+- Health check: `https://imaginative-communication-production-ffd35873.up.railway.app/health`
+- Swagger UI: `https://imaginative-communication-production-ffd35873.up.railway.app/api-docs`
+- Métricas RED: `https://imaginative-communication-production-ffd35873.up.railway.app/metrics`

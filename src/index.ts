@@ -1,7 +1,8 @@
 import 'reflect-metadata';
+import './instrumentation'; // Deve ser o primeiro import (antes de express/pg)
 import { createApp } from './app';
 import { initializeDatabase } from './infra/database/data-source';
-import { initTracing, shutdownTracing } from './infra/observability/tracing';
+import { shutdownTracing } from './infra/observability/tracing';
 import { queueManager } from './infra/queue/QueueManager';
 import { env } from './config/env';
 import { logger, sanitizeHost } from './shared/infrastructure/logger';
@@ -14,7 +15,6 @@ function getErrorDetails(error: unknown): { name?: string; code?: string } {
 
 async function main(): Promise<void> {
   try {
-    initTracing();
     try {
       await initializeDatabase();
     } catch (error) {

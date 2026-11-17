@@ -16,7 +16,8 @@ Marketplace como **monólito modular** (catálogo, pedidos, pagamento) implement
 - **Documentação**: OpenAPI 3.1 + Swagger UI, com lint por Spectral na CI
 - **Contêineres**: Dockerfile multi-stage e Docker Compose (app, PostgreSQL, Redis, Prometheus, Grafana e Jaeger)
 - **CI/CD**: GitHub Actions (lint, typecheck, Spectral, SCA, cobertura, integração e smoke k6)
-- **Deploy**: Railway com Dockerfile e health check em `/health`
+- **Deploy**: Railway com Dockerfile e health check em `/health` — API publicada em
+  `https://imaginative-communication-production-ffd35873.up.railway.app`
 
 ## Estrutura
 
@@ -37,10 +38,11 @@ Marketplace como **monólito modular** (catálogo, pedidos, pagamento) implement
 │   ├── shared/           # Seedwork de domínio (Entity, ValueObject, AppError, Money)
 │   ├── infra/            # Banco, cache, fila, observabilidade
 │   ├── modules/
-│   │   ├── catalog/      # domain / application / infra / interface
+│   │   ├── catalog/      # domain / application / infra / interface (produtos com imageUrl)
 │   │   ├── orders/
 │   │   └── payments/     # Strategy Pattern (PIX, Cartão, Boleto)
 │   ├── interface/http/   # Middlewares (erro, métricas, validação)
+│   ├── instrumentation.ts # OTEL: deve ser o primeiro import (antes de express/pg)
 │   ├── app.ts
 │   └── index.ts
 ├── tests/
@@ -60,9 +62,39 @@ docker-compose up -d
 
 Aplicação em `http://localhost:3000`, Swagger em `/api-docs`, métricas em `/metrics`.
 
+## Como subir em desenvolvimento local (API + serviços)
+
+Para desenvolvimento com hot-reload (`tsx watch`), suba apenas os serviços de
+infra no Docker e rode a API localmente:
+
+```bash
+# Terminal 1 - banco + cache
+docker compose up db redis
+
+# Terminal 2 - API (hot-reload)
+npm run dev
+
+# Terminal 3 - observabilidade (sem o app do compose, que conflita na porta 3000)
+docker compose up prometheus grafana jaeger --no-deps
+```
+
+O [observability/prometheus.yml](observability/prometheus.yml) aponta para
+`host.docker.internal:3000` (a API rodando no host). Acesse:
+- API: `http://localhost:3000`
+- Swagger: `http://localhost:3000/api-docs`
+- Métricas: `http://localhost:3000/metrics`
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3001` (admin / admin)
+- Jaeger: `http://localhost:16686`
+
+> O bootstrap do OpenTelemetry vive em `src/instrumentation.ts` e deve ser o
+> **primeiro import** de `index.ts`, antes de `express` e `pg`. Caso contrário,
+> os instrumentos não conseguem interceptar as chamadas e o Jaeger fica vazio.
+
 ## Observabilidade
 
-- **Métricas**: a aplicação expõe métricas RED em `/metrics` na própria porta HTTP (`3000`). O Prometheus ([observability/prometheus.yml](observability/prometheus.yml)) raspa `app:3000/metrics` a cada 15s; UI em `http://localhost:9090`.
+- **Métricas**: a aplicação expõe métricas RED em `/metrics` na própria porta HTTP (`3000`). O Prometheus ([observability/prometheus.yml](observability/prometheus.yml)) raspa `host.docker.internal:3000/metrics` a cada 15s, endereço válido tanto com a API no host quanto pelo `docker-compose` (a porta `3000` do app é publicada no host); UI em `http://localhost:9090`.
+- **Reset de métricas**: `POST /metrics/reset` zera todos os contadores (`http_requests_total`, `http_errors_total`, `orders_created_total`, `payments_processed_total`) sem reiniciar o processo. Útil para demos e homologação.
 - **Dashboards**: o Grafana (`http://localhost:3001`, admin/admin) sobe com datasource e o dashboard RED `marketplace-red` provisionados a partir de [observability/grafana](observability/grafana), versionados no repositório.
 - **Tracing**: spans são exportados via OTLP HTTP para o Jaeger em `http://jaeger:4318/v1/traces`; UI em `http://localhost:16686`.
 
@@ -121,6 +153,10 @@ A escolha do padrão de persistência e a justificativa estão registradas em [A
 - **Idempotência de fila** (M4): o `jobId` é derivado por SHA-256 de pedido, método e cabeçalho `Idempotency-Key`, com três tentativas e backoff exponencial; repetir a requisição reutiliza o mesmo job em vez de duplicar o pagamento.
 - **Validação na borda e erro centralizado**: middleware `validateBody` (class-validator) nos DTOs de entrada e um único `errorHandler` traduzindo `AppError` para respostas HTTP.
 
+## Imagem de produtos
+
+Cada produto possui um campo opcional `imageUrl` (URL pública HTTP/HTTPS, até 500 caracteres), validado com `@IsUrl` no DTO de entrada e exposto no `ProductOutput`. A coluna foi adicionada pela migration `1700000000001-AddProductImageUrl` e tem valor padrão `''`. Produtos sem `imageUrl` ficam a cargo do frontend exibir um fallback (imagem local por SKU ou iniciais do nome).
+
 ## Feature Flag
 
 | Flag              | Padrão  | Efeito |
@@ -128,6 +164,13 @@ A escolha do padrão de persistência e a justificativa estão registradas em [A
 | `FF_NEW_CHECKOUT` | `false` | Quando habilitada, o checkout pré-valida todos os produtos (existência e atividade) antes de reservar qualquer estoque; desabilitada, a validação continua item a item durante a reserva. |
 
 A flag é lida em `src/config/env.ts` e exposta por `src/shared/infrastructure/feature-flags.ts` via `isFeatureEnabled('newCheckout')`, consumida na composição do módulo de pedidos. Habilite com `FF_NEW_CHECKOUT=true` no `.env`, no `docker-compose.yml` ou nas variáveis do serviço de deploy. Os valores de leitura são cobertos por `tests/unit/config/env.test.ts` e o comportamento por `tests/unit/orders/CreateOrderUseCase.test.ts`.
+
+## Deploy
+
+- **API (Railway):** https://imaginative-communication-production-ffd35873.up.railway.app
+- **Swagger/OpenAPI:** https://imaginative-communication-production-ffd35873.up.railway.app/api-docs
+- **Frontend (Vercel):** https://marketplace-web-8xzp.vercel.app/
+- **CI:** https://github.com/Jardheson/marketplace-modular/actions
 
 ## Autor
 

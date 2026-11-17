@@ -2,7 +2,7 @@
 
 > Quadro de acompanhamento do Projeto Final (Full Cycle, Módulo 4).
 > Fluxo: **Backlog → Em Andamento → Revisão → Concluído**.
-> Última atualização: 2026-11-10.
+> Última atualização: 2026-11-17.
 
 ## Legenda de status
 
@@ -16,28 +16,21 @@
 Pipeline de entrega:
 
     Toolchain ─▶ Módulos ─▶ Observabilidade ─▶ Testes & CI ─▶ Performance ─▶ Deploy
-        ✅           ✅            ✅               ✅             ✅           🔵
+        ✅           ✅            ✅               ✅             ✅           ✅
 
 ---
 
 ## ⚪ Backlog
 
-| ID   | Card                                                          | Fase   | Depende de |
-| ---- | ------------------------------------------------------------- | ------ | ---------- |
-| K-30 | Deploy de produção no Railway (`railway.json`, migrations no boot) | Deploy | K-21, K-22 |
+_Nenhum card nesta coluna._
 
 ## 🔵 Em Andamento
 
-| ID   | Card                                                                | Fase   | Notas                                                                     |
-| ---- | ------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------- |
-| K-31 | Configurar serviços `Postgres`/`Redis` no dashboard e interpolação `${{...}}` | Deploy | Conta criada; nomes de serviço devem coincidir com as env vars |
+_Nenhum card nesta coluna._
 
 ## 🟡 Revisão
 
-| ID   | Card                                          | Fase        | Evidência                                                                        |
-| ---- | --------------------------------------------- | ----------- | -------------------------------------------------------------------------------- |
-| K-21 | Soak test k6 (50 VUs, 40 min)                 | Performance | [k6-soak-summary.json](performance/k6-soak-summary.json) — p95 6 ms, 0% falhas    |
-| K-22 | `EXPLAIN (ANALYZE, BUFFERS)` nas queries críticas | Performance | [explain-*](performance/) — índices `idx_products_sku`, `idx_orders_customer`   |
+_Nenhum card nesta coluna._
 
 ## ✅ Concluído
 
@@ -64,6 +57,10 @@ Pipeline de entrega:
 | K-29  | CI GitHub Actions: lint, typecheck, SCA, cobertura, integração, k6 smoke     | Testes & CI      | [.github/workflows/ci.yml](../.github/workflows/ci.yml)                              |
 | K-32  | Feature flag `FF_NEW_CHECKOUT` documentada e testada                         | Testes & CI      | [feature-flags.ts](../src/shared/infrastructure/feature-flags.ts)                    |
 | K-33  | Smoke e stress k6                                                            | Performance      | [k6/](../k6)                                                                         |
+| K-21  | Soak test k6 (50 VUs, 40 min)                                                | Performance      | [k6-soak-summary.json](performance/k6-soak-summary.json) — p95 6 ms, 0% falhas       |
+| K-22  | `EXPLAIN (ANALYZE, BUFFERS)` nas queries críticas                            | Performance      | [explain-*](performance/) — índices `idx_products_sku`, `idx_orders_customer`        |
+| K-30  | Deploy de produção no Railway (`railway.json`, migrations no boot)           | Deploy           | [deploy.md](deploy.md) — `/health`, `/metrics` e `/api-docs` respondem `200`         |
+| K-31  | Serviços `Postgres`/`Redis` e interpolação `${{...}}` no dashboard           | Deploy           | [deploy.md](deploy.md) — variáveis do serviço `imaginative-communication`            |
 
 ## Regras do fluxo
 
