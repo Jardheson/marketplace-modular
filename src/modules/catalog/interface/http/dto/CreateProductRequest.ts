@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Min, MinLength } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, IsUUID, MaxLength, Min, MinLength } from 'class-validator';
 
 export class CreateProductRequest {
   @IsString()
@@ -24,4 +24,9 @@ export class CreateProductRequest {
   @IsString()
   @IsNotEmpty()
   sku!: string;
+
+  @IsOptional()
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
+  @MaxLength(500)
+  imageUrl?: string;
 }

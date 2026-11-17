@@ -28,6 +28,9 @@ export class ProductEntity {
   @Column({ type: 'varchar', length: 80 })
   sku: string;
 
+  @Column({ name: 'image_url', type: 'varchar', length: 500, default: '' })
+  imageUrl: string;
+
   @Column({ type: 'boolean', default: true })
   active: boolean;
 

@@ -9,6 +9,7 @@ import { Money } from '../../../src/shared/domain/Money';
 import { ProductEntity } from '../../../src/modules/catalog/infra/persistence/typeorm/entities/Product.entity';
 import { CategoryEntity } from '../../../src/modules/catalog/infra/persistence/typeorm/entities/Category.entity';
 import { InitialSchema1700000000000 } from '../../../src/infra/database/migrations/1700000000000-InitialSchema';
+import { AddProductImageUrl1700000000001 } from '../../../src/infra/database/migrations/1700000000001-AddProductImageUrl';
 import { isDockerAvailable } from '../../helpers/dockerCheck';
 
 describe('ProductTypeOrmRepository (integração)', () => {
@@ -43,7 +44,7 @@ describe('ProductTypeOrmRepository (integração)', () => {
       password: 'test',
       database: 'test_db',
       entities: [ProductEntity, CategoryEntity],
-      migrations: [InitialSchema1700000000000],
+      migrations: [InitialSchema1700000000000, AddProductImageUrl1700000000001],
       migrationsRun: true,
       synchronize: false,
       logging: false,

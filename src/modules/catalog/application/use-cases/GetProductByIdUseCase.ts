@@ -34,6 +34,7 @@ export class GetProductByIdUseCase implements UseCase<string, ProductOutput> {
       stock: p.stock,
       categoryId: p.categoryId,
       sku: p.sku,
+      imageUrl: p.imageUrl,
       active: p.active,
       createdAt: p.createdAt.toISOString(),
       updatedAt: p.updatedAt.toISOString(),

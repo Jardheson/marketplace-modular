@@ -264,6 +264,7 @@ components:
         stock: { type: integer }
         categoryId: { type: string, format: uuid }
         sku: { type: string }
+        imageUrl: { type: string, example: 'https://cdn.exemplo.com/produto.jpg' }
         active: { type: boolean }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
@@ -278,6 +279,7 @@ components:
         stock: { type: integer, minimum: 0 }
         categoryId: { type: string, format: uuid }
         sku: { type: string }
+        imageUrl: { type: string, format: uri, maxLength: 500, description: URL publica da imagem do produto }
 
     Category:
       type: object

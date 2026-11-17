@@ -12,6 +12,7 @@ export class ProductMapper {
         stock: entity.stock,
         categoryId: entity.categoryId,
         sku: entity.sku,
+        imageUrl: entity.imageUrl ?? '',
         active: entity.active,
         createdAt: entity.createdAt,
         updatedAt: entity.updatedAt,
@@ -30,6 +31,7 @@ export class ProductMapper {
     entity.stock = product.stock;
     entity.categoryId = product.categoryId;
     entity.sku = product.sku;
+    entity.imageUrl = product.imageUrl;
     entity.active = product.active;
     entity.createdAt = product.createdAt;
     entity.updatedAt = product.updatedAt;

@@ -7,6 +7,7 @@ import { createApp } from '../../src/app';
 import { queueManager } from '../../src/infra/queue/QueueManager';
 import { cache } from '../../src/infra/cache/RedisCache';
 import { InitialSchema1700000000000 } from '../../src/infra/database/migrations/1700000000000-InitialSchema';
+import { AddProductImageUrl1700000000001 } from '../../src/infra/database/migrations/1700000000001-AddProductImageUrl';
 import { isDockerAvailable } from '../helpers/dockerCheck';
 
 describe('API Contract - Catálogo', () => {
@@ -42,7 +43,7 @@ describe('API Contract - Catálogo', () => {
       username: 'test',
       password: 'test',
       database: 'contract_db',
-      migrations: [InitialSchema1700000000000],
+      migrations: [InitialSchema1700000000000, AddProductImageUrl1700000000001],
       migrationsRun: true,
       synchronize: false,
       logging: false,

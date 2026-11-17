@@ -28,6 +28,7 @@ export class CreateProductUseCase implements UseCase<CreateProductInput, Product
       stock: input.stock,
       categoryId: input.categoryId,
       sku: input.sku,
+      imageUrl: input.imageUrl,
     });
 
     const saved = await this.productRepo.save(product);
@@ -46,6 +47,7 @@ export class CreateProductUseCase implements UseCase<CreateProductInput, Product
       stock: p.stock,
       categoryId: p.categoryId,
       sku: p.sku,
+      imageUrl: p.imageUrl,
       active: p.active,
       createdAt: p.createdAt.toISOString(),
       updatedAt: p.updatedAt.toISOString(),

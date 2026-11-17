@@ -5,6 +5,7 @@ export interface CreateProductInput {
   stock: number;
   categoryId: string;
   sku: string;
+  imageUrl?: string;
 }
 
 export interface UpdateProductPriceInput {
@@ -21,6 +22,7 @@ export interface ProductOutput {
   stock: number;
   categoryId: string;
   sku: string;
+  imageUrl: string;
   active: boolean;
   createdAt: string;
   updatedAt: string;

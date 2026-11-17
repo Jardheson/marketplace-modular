@@ -145,6 +145,7 @@ describe('Product (domínio)', () => {
       stock: 10,
       categoryId: 'cat-1',
       sku: 'NB-001',
+      imageUrl: '',
       active: true,
       createdAt: new Date('2024-01-01'),
       updatedAt: new Date('2024-01-02'),

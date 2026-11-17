@@ -21,6 +21,7 @@ export class ProductController {
         stock: Number(input.stock),
         categoryId: String(input.categoryId),
         sku: String(input.sku),
+        imageUrl: input.imageUrl,
       });
       res.status(201).json(result);
     } catch (error) {

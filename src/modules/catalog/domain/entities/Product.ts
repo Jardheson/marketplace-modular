@@ -9,6 +9,7 @@ export interface ProductProps {
   stock: number;
   categoryId: string;
   sku: string;
+  imageUrl: string;
   active: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -26,6 +27,7 @@ export class Product extends AggregateRoot<ProductProps> {
     stock: number;
     categoryId: string;
     sku: string;
+    imageUrl?: string;
   }): Product {
     if (!input.name?.trim()) throw AppError.validation('Nome do produto é obrigatório.');
     if (!input.sku?.trim()) throw AppError.validation('SKU é obrigatório.');
@@ -39,6 +41,7 @@ export class Product extends AggregateRoot<ProductProps> {
       stock: input.stock,
       categoryId: input.categoryId,
       sku: input.sku.trim(),
+      imageUrl: input.imageUrl?.trim() ?? '',
       active: true,
       createdAt: now,
       updatedAt: now,
@@ -66,6 +69,9 @@ export class Product extends AggregateRoot<ProductProps> {
   }
   get sku(): string {
     return this.props.sku;
+  }
+  get imageUrl(): string {
+    return this.props.imageUrl;
   }
   get active(): boolean {
     return this.props.active;
