@@ -8,7 +8,14 @@ import path from 'path';
 import { DataSource } from 'typeorm';
 import { metricsMiddleware } from './interface/http/middlewares/metricsMiddleware';
 import { errorHandler } from './interface/http/middlewares/errorHandler';
-import { metricsRegistry } from './infra/observability/metrics';
+import {
+  metricsRegistry,
+  httpRequestsTotal,
+  httpRequestDurationMs,
+  httpErrorsTotal,
+  ordersCreatedTotal,
+  paymentsProcessedTotal,
+} from './infra/observability/metrics';
 import { createCatalogModule } from './modules/catalog/catalog.module';
 import { createOrdersModule } from './modules/orders/orders.module';
 import { createPaymentsModule } from './modules/payments/payments.module';
@@ -31,6 +38,16 @@ export function createApp(dataSource: DataSource = AppDataSource) {
   app.get('/metrics', async (_req: Request, res: Response) => {
     res.set('Content-Type', metricsRegistry.contentType);
     res.send(await metricsRegistry.metrics());
+  });
+
+  // Reset de métricas (util para demos e ambientes de homologacao)
+  app.post('/metrics/reset', (_req: Request, res: Response) => {
+    httpRequestsTotal.reset();
+    httpRequestDurationMs.reset();
+    httpErrorsTotal.reset();
+    ordersCreatedTotal.reset();
+    paymentsProcessedTotal.reset();
+    res.status(200).json({ reset: true });
   });
 
   // OpenAPI / Swagger
